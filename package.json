@@ -1,0 +1,23 @@
+{
+  "name": "signalwire",
+  "version": "1.0.0",
+  "description": "Quick IVR application made with SignalWire API and hosted on AWS.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cmd": "echo \"This is another message from a different test using the echo command\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@signalwire/compatibility-api": "^3.0.3",
+    "@signalwire/node": "^2.5.0",
+    "@signalwire/realtime-api": "^3.5.1",
+    "aws-sdk": "^2.1231.0",
+    "axios": "^1.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  }
+}
