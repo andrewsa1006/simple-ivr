@@ -85,7 +85,6 @@ const handleUserInput = async (digits, call) => {
       });
       setTimeout(async () => {
         const recording = await call.recordAudio({ beep: true, terminators: "0" });
-        console.log(recording);
         await call.waitFor("ended");
         SES.sendEmail(generateParamsForSES(call, recording), (err, data) => {
           if (err) console.log(err, err.stack); // an error occurred
@@ -111,8 +110,6 @@ const handleUserInput = async (digits, call) => {
 // Main entrypoint to application
 const main = async () => {
   client.on("call.received", async (call) => {
-    console.log("Call received:", call.id, call.from, call.to);
-
     try {
       await call.answer();
       let answeringService = await call.playTTS({
