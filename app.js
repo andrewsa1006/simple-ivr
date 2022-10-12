@@ -1,13 +1,7 @@
 // General imports
 require("dotenv").config();
-const cors = require("cors");
 const AWS = require("aws-sdk");
-const express = require("express");
 const { Voice } = require("@signalwire/realtime-api");
-
-const app = express();
-app.use(express.json());
-app.use(cors());
 
 // Instantiating and configuring SES
 AWS.config.update({ region: "us-east-1" });
