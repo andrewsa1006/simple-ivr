@@ -2,6 +2,9 @@
 require("dotenv").config();
 const AWS = require("aws-sdk");
 const { Voice } = require("@signalwire/realtime-api");
+const express = require("express");
+
+const app = express();
 
 // Instantiating and configuring SES
 AWS.config.update({ region: "us-east-1" });
@@ -50,54 +53,68 @@ const generateParamsForSES = (call, recording) => {
   return params;
 };
 
+// Articulate options for caller
 const playPromptList = async (call) => {
-  const promptList = await call.promptTTS({
-    text: `Press 1 to hear Andrew's hours of operation.
-           Press 2 to send Andrew a voice message.
-           Press 9 to hear these options again.
-           Press 0 if done, or hang up to disconnect the call.`,
-    digits: {
-      max: 1,
-      digitTimeout: 15,
-    },
-  });
-  let { digits } = await promptList.waitForResult();
-  handleUserInput(digits, call);
+  try {
+    const promptList = await call.promptTTS({
+      text: `Press 1 to hear Andrew's hours of operation.
+             Press 2 to send Andrew a voice message.
+             Press 9 to hear these options again.
+             Press 0 if done, or hang up to disconnect the call.`,
+      digits: {
+        max: 1,
+        digitTimeout: 15,
+      },
+    });
+    let { digits } = await promptList.waitForResult();
+    handleUserInput(digits, call);
+  } catch (error) {
+    // handle error in more elegant way
+    console.log(error);
+  }
 };
 
+// Functions for performing actions based on user input
+
+// take user input from options list and perform action by calling one of the above functions
 const handleUserInput = async (digits, call) => {
-  switch (digits) {
-    case "1":
-      await call.playTTS({
-        text: `Andrew's current hours of operation are from 8 AM, to just after 9AM. If you need to reach him outside of these hours, please hang up and call again later.`,
-      });
-      break;
-
-    case "2":
-      await call.playTTS({
-        text: `Please record your message after the tone. When you are finished, you may hang up.`,
-      });
-      setTimeout(async () => {
-        const recording = await call.recordAudio({ beep: true, terminators: "0" });
-        await call.waitFor("ended");
-        SES.sendEmail(generateParamsForSES(call, recording), (err, data) => {
-          if (err) console.log(err, err.stack); // an error occurred
-          else console.log(data); // successful response
+  try {
+    switch (digits) {
+      case "1":
+        await call.playTTS({
+          text: `Andrew's current hours of operation are from 8 AM, to just after 9AM. If you need to reach him outside of these hours, please hang up and call again later.`,
         });
-      }, 7000);
-      break;
+        break;
 
-    case "9":
-      playPromptList(call);
-      break;
+      case "2":
+        await call.playTTS({
+          text: `Please record your message after the tone. When you are finished, you may hang up.`,
+        });
+        setTimeout(async () => {
+          const recording = await call.recordAudio({ beep: true, terminators: "0" });
+          await call.waitFor("ended");
+          SES.sendEmail(generateParamsForSES(call, recording), (err, data) => {
+            if (err) console.log(err, err.stack); // an error occurred
+            else console.log(data); // successful response
+          });
+        }, 7000);
+        break;
 
-    case "0":
-      call.hangup();
-      break;
+      case "9":
+        playPromptList(call);
+        break;
 
-    default:
-      playPromptList(call);
-      break;
+      case "0":
+        call.hangup();
+        break;
+
+      default:
+        playPromptList(call);
+        break;
+    }
+  } catch (error) {
+    // handle error in more elegant way
+    console.log(error);
   }
 };
 
@@ -107,18 +124,18 @@ const main = async () => {
     try {
       await call.answer();
       let answeringService = await call.playTTS({
-        text: "Hello. Thank you for calling Andrew Atwood Limited. Please listen carefully, as the following prompt contains new options.",
+        text: "Hello. Thank you for calling Andrew Atwood Limited. Please listen carefully, as the following prompt may contain new options.",
       });
       await answeringService.waitForEnded();
-      playPromptList(call);
+      playPromptList(call, SES);
     } catch (error) {
+      // handle error in more elegant way
       console.error("Error answering inbound call", error);
     }
   });
 };
 
-main();
-
 app.listen(3000, () => {
-  console.log("Application running on port 3000");
+  console.log("IVR waiting for calls on 3000");
+  main();
 });

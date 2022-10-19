@@ -2,7 +2,7 @@
   "name": "signalwire",
   "version": "1.0.0",
   "description": "Quick IVR application made with SignalWire API and hosted on AWS.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cmd": "echo \"This is another message from a different test using the echo command\""
